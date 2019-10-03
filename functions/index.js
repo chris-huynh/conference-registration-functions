@@ -3,29 +3,34 @@ const admin = require('firebase-admin');
 
 admin.initializeApp();
 
+const express = require('express');
+const app = express();
+
 // Create and Deploy Your First Cloud Functions
 // https://firebase.google.com/docs/functions/write-firebase-functions
 
-exports.helloWorld = functions.https.onRequest((request, response) => {
-    response.send("Hello from Firebase!");
-});
-
-exports.getWorkshops = functions.https.onRequest((request, response) => {
+app.get('/workshops', (request, response) => {
     admin.firestore().collection('workshops').get()
         .then(data => {
             let workshops = [];
             data.forEach(doc => {
-                workshops.push(doc.data());
+                workshops.push({
+                    workshopId: doc.id,
+                    session: doc.data().session,
+                    workshopTitle: doc.data().workshopTitle,
+                    maxCapacity: doc.data().maxCapacity,
+                    students: doc.data().students,
+                    currentCapacity: doc.data().currentCapacity,
+                    workshopDescription: doc.data().workshopDescription,
+                    presenterName: doc.data().presenterName
+                });
             });
             return response.json(workshops)
         })
         .catch(error => console.error(error))
 });
 
-exports.createWorkshop = functions.https.onRequest((request, response) => {
-    if (request.method !== 'POST') {
-        return response.status(400).json({error: 'Method not allowed'})
-    }
+app.post('/workshop',(request, response) => {
     const newWorkshop = {
         session: request.body.session,
         workshopTitle: request.body.workshopTitle,
@@ -40,10 +45,12 @@ exports.createWorkshop = functions.https.onRequest((request, response) => {
         .collection('workshops')
         .add(newWorkshop)
         .then(doc => {
-            response.json({message: 'document ${doc.id} successfully created'});
+            response.json({message: `document ${doc.id} successfully created`});
         })
         .catch((error) => {
             response.status(500).json({error: 'Something went wrong.'});
             console.error(error)
         });
 });
+
+exports .api = functions.https.onRequest(app);
