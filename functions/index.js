@@ -1,16 +1,28 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
-
-admin.initializeApp();
-
 const express = require('express');
 const app = express();
 
-// Create and Deploy Your First Cloud Functions
-// https://firebase.google.com/docs/functions/write-firebase-functions
+admin.initializeApp();
+
+const config = {
+    apiKey: "AIzaSyCo-zZVlqtxaBsBSgmAa7IA2u3oNP1_dpM",
+    authDomain: "conference-registration-96fee.firebaseapp.com",
+    databaseURL: "https://conference-registration-96fee.firebaseio.com",
+    projectId: "conference-registration-96fee",
+    storageBucket: "conference-registration-96fee.appspot.com",
+    messagingSenderId: "965368768984",
+    appId: "1:965368768984:web:d31ee464a0b5592acc6aad",
+    measurementId: "G-PGBB9P9EP7"
+};
+
+const firebase = require('firebase');
+firebase.initializeApp(config);
+
+const db = admin.firestore();
 
 app.get('/workshops', (request, response) => {
-    admin.firestore().collection('workshops').get()
+    db().collection('workshops').get()
         .then(data => {
             let workshops = [];
             data.forEach(doc => {
@@ -30,7 +42,7 @@ app.get('/workshops', (request, response) => {
         .catch(error => console.error(error))
 });
 
-app.post('/workshop',(request, response) => {
+app.post('/workshop', (request, response) => {
     const newWorkshop = {
         session: request.body.session,
         workshopTitle: request.body.workshopTitle,
@@ -41,7 +53,7 @@ app.post('/workshop',(request, response) => {
         presenterName: request.body.presenterName
     };
 
-    admin.firestore()
+    db()
         .collection('workshops')
         .add(newWorkshop)
         .then(doc => {
@@ -53,4 +65,54 @@ app.post('/workshop',(request, response) => {
         });
 });
 
-exports .api = functions.https.onRequest(app);
+//signup route
+app.post('/signup', (request, response) => {
+    const newUser = {
+        email: request.body.email,
+        password: request.body.password,
+        confirmPassword: request.body.confirmPassword,
+        firstName: request.body.firstName,
+        lastName: request.body.lastName
+    };
+
+    //TODO: validate data
+    let token, userId;
+    db.doc(`/users/${newUser.email}`)
+        .get()
+        .then((doc) => {
+            if (doc.exists) {
+                return response.status(400).json({email: 'This email is already in use'})
+            } else {
+                return firebase
+                    .auth()
+                    .createUserWithEmailAndPassword(newUser.email, newUser.password);
+            }
+        })
+        .then((data) => {
+            userId = data.user.uid;
+            return data.user.getIdToken();
+        })
+        .then((idToken) => {
+            token = idToken;
+            const userCredentials = {
+                firstName: newUser.firstName,
+                lastName: newUser.lastName,
+                createdAt: new Date().toISOString(),
+                userId
+            };
+            return db.doc(`/users/${newUser.email}`).set(userCredentials);
+        })
+        .then(() => {
+            return response.status(201).json({ token })
+        })
+        .catch((error) => {
+            console.error(error);
+            if(error.code === 'auth/email-already-in-use'){
+                return response.status(400).json({ email: 'Email is already in use'})
+            } else {
+                return response.status(500).json({error: error.code});
+            }
+        });
+});
+
+exports.api = functions.https.onRequest(app);
