@@ -11,7 +11,6 @@ exports.getAllWorkshops = (request, response) => {
                     workshopTitle: doc.data().workshopTitle,
                     maxCapacity: doc.data().maxCapacity,
                     students: doc.data().students,
-                    currentCapacity: doc.data().currentCapacity,
                     workshopDescription: doc.data().workshopDescription,
                     presenterName: doc.data().presenterName
                 });
@@ -27,7 +26,6 @@ exports.postWorkshop = (request, response) => {
         workshopTitle: request.body.workshopTitle,
         maxCapacity: request.body.maxCapacity,
         students: request.body.students,
-        currentCapacity: request.body.currentCapacity,
         workshopDescription: request.body.workshopDescription,
         presenterName: request.body.presenterName
     };
