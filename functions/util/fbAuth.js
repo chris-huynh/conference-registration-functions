@@ -1,4 +1,4 @@
-const { admin } = require('./admin');
+const { admin, db } = require('./admin');
 
 module.exports = (request, response, next) => {
     let idToken;
@@ -8,7 +8,6 @@ module.exports = (request, response, next) => {
         console.error('No token found');
         return response.status(403).json({error: 'Unauthorized Access'});
     }
-    let testString;
 
     admin.auth().verifyIdToken(idToken)
         .then(decodedToken => {
@@ -19,7 +18,6 @@ module.exports = (request, response, next) => {
                 .get();
         })
         .then(data => {
-            testString = data.docs[0].data();
             request.user.email = data.docs[0].data().email;
             return next();
         })
