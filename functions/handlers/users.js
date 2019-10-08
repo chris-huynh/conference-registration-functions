@@ -1,13 +1,13 @@
-const { admin, db } = require('../util/admin');
+const {admin, db} = require('../util/admin');
 
 const config = require('../util/config');
 
 const firebase = require('firebase');
 firebase.initializeApp(config);
 
-const {validateSignUpData, validateLoginData} = require('../util/validators');
-
-exports.signUp= (request, response) => {
+const {validateSignUpData, validateLoginData, reduceUserDetails} = require('../util/validators');
+//Sign user in
+exports.signUp = (request, response) => {
     const newUser = {
         email: request.body.email,
         password: request.body.password,
@@ -16,9 +16,9 @@ exports.signUp= (request, response) => {
         lastName: request.body.lastName
     };
 
-    const { valid, errors} = validateSignUpData(newUser);
+    const {valid, errors} = validateSignUpData(newUser);
 
-    if(!valid) return response.status(400).json({errors});
+    if (!valid) return response.status(400).json({errors});
 
     const defaultImg = 'no-img.png';
 
@@ -62,16 +62,16 @@ exports.signUp= (request, response) => {
             }
         });
 };
-
+//Log user in
 exports.login = (request, response) => {
     const user = {
         email: request.body.email,
         password: request.body.password
     };
 
-    const { valid, errors} = validateLoginData(user);
+    const {valid, errors} = validateLoginData(user);
 
-    if(!valid) return response.status(400).json({errors});
+    if (!valid) return response.status(400).json({errors});
 
     firebase.auth().signInWithEmailAndPassword(user.email, user.password)
         .then(data => {
@@ -89,28 +89,63 @@ exports.login = (request, response) => {
         });
 };
 
+//add user details
+exports.addUserDetails = (request, response) => {
+    let userDetails = reduceUserDetails(request.body);
+
+    db.doc(`/users/${request.user.email}`).update(userDetails)
+        .then(() => {
+            return response.json({message: 'Details added successfully'});
+        })
+        .catch((error) => {
+            return response.status(500).json({error: error.code});
+        });
+};
+
+exports.getAuthenticatedUser = (request, response) => {
+    let userData = {};
+    db.doc(`/users/${request.user.email}`).get()
+        .then(doc => {
+            if (doc.exists){
+                userData.credentials = doc.data();
+                return db.collection('schedules').where('studentEmail', '==', request.user.email).get()
+            }
+        })
+        .then(data => {
+            userData.workshopTitles = [];
+            data.forEach(doc => {
+                userData.workshopTitles.push(doc.data());
+            });
+            return response.json(userData)
+        })
+        .catch(error => {
+            return response.status(500).json({error: error.code});
+        })
+};
+
+//Upload a profile image of user
 exports.uploadImage = (request, response) => {
     const BusBoy = require('busboy');
     const path = require('path');
     const os = require('os');
     const fs = require('fs');
 
-    const busboy = new BusBoy({ headers: request.headers });
+    const busboy = new BusBoy({headers: request.headers});
 
     let imageFileName;
     let imageToBeUploaded = {};
 
     busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
-        if(mimetype !== 'image/jpeg' && mimetype !== 'image/png') {
-            return response.status(400).json({ error: 'File not supported, please upload a .jpeg or .png file'});
+        if (mimetype !== 'image/jpeg' && mimetype !== 'image/png') {
+            return response.status(400).json({error: 'File not supported, please upload a .jpeg or .png file'});
         }
         const imageExtension = filename.split('.').pop();
-        imageFileName = `${Math.round(Math.random()*100000000000)}.${imageExtension}`;
+        imageFileName = `${Math.round(Math.random() * 100000000000)}.${imageExtension}`;
         const filePath = path.join(os.tmpdir(), imageFileName);
-        imageToBeUploaded = { filePath, mimetype };
+        imageToBeUploaded = {filePath, mimetype};
         file.pipe(fs.createWriteStream(filePath));
     });
-    busboy.on('finish', () =>{
+    busboy.on('finish', () => {
         admin.storage().bucket().upload(imageToBeUploaded.filePath, {
             resumable: false,
             metadata: {
@@ -119,17 +154,17 @@ exports.uploadImage = (request, response) => {
                 }
             }
         })
-        .then(() => {
-            const imageURL = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${imageFileName}?alt=media`;
-            return db.doc(`/users/${request.user.email}`).update({ imageURL });
-        })
-        .then(() => {
-            return response.json({ message: 'Image successfully uploaded'});
-        })
-        .catch((error) => {
-            console.error(error);
-            return response.status(500).json({ error: error.code})
-        })
+            .then(() => {
+                const imageURL = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${imageFileName}?alt=media`;
+                return db.doc(`/users/${request.user.email}`).update({imageURL});
+            })
+            .then(() => {
+                return response.json({message: 'Image successfully uploaded'});
+            })
+            .catch((error) => {
+                console.error(error);
+                return response.status(500).json({error: error.code})
+            })
     });
     busboy.end(request.rawBody);
 };

@@ -38,3 +38,13 @@ exports.validateLoginData = (data) => {
         valid: Object.keys(errors).length === 0
     }
 };
+
+exports.reduceUserDetails = (data) => {
+    let userDetails = {};
+
+    Object.keys(data).forEach(function (item) {
+        if (!isEmpty(data[item].trim())) userDetails[item] = data[item];
+    });
+
+    return userDetails
+};

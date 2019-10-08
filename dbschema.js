@@ -36,3 +36,39 @@ let db = {
         }
     ]
 };
+const userDetails = {
+    credentials: {
+        userId: '',
+        email: 'name@email.com',
+        firstName: 'John',
+        lastName: 'Smith',
+        createdAt: 'ISO Date Time String',
+        imageUrl: '',
+        university: "string",
+        major: "string",
+        graduationYear: "string",
+        genderPronouns: "string",
+        family: "string",
+        twitter: "string",
+        instagram: "string",
+        facebook: "string",
+        snapchat: "string",
+        phoneNumber: "string",
+        banquetEntree: "string",
+        foodAllergies: "string",
+        shirtSize: "string",
+        emergencyContactName: "string",
+        emergencyContactPhone: "string",
+        emergencyContactRelationship: "string"
+    },
+    schedules: [
+        {
+            workshopTitle: "",
+            session: 1
+        },
+        {
+            workshopTitle: "",
+            session: 2
+        }
+    ]
+};
