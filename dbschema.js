@@ -30,9 +30,17 @@ let db = {
             workshopTitle: "string",
             workshopDescription: "string",
             presenterName: "string",
-            students: [ "string", "string" ],
             session: 1,
             maxCapacity: 10
+        }
+    ],
+    rosters: [
+        {
+            students:[
+                "name@email.com",
+                "name@email.com"
+                ],
+            workshopId: ""
         }
     ]
 };
