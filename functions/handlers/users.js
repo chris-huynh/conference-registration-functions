@@ -108,7 +108,7 @@ exports.getAuthenticatedUser = (request, response) => {
         .then(doc => {
             if (doc.exists){
                 userData.credentials = doc.data();
-                return db.collection('schedules').where('studentEmail', '==', request.user.email).get()
+                return db.collection('schedules').orderBy('session', 'asc').where('studentEmail', '==', request.user.email).get()
             }
         })
         .then(data => {

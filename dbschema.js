@@ -71,6 +71,9 @@ const userDetails = {
     },
     schedules: [
         {
+            userId: ""
+        },
+        {
             workshopTitle: "",
             session: 1
         },
