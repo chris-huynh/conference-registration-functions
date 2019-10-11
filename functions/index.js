@@ -3,7 +3,7 @@ const express = require('express');
 const app = express();
 
 const FBAuth = require('./util/fbAuth');
-
+// , registerForWorkshop
 const { getAllWorkshops, postWorkshop, getWorkshop } = require('./handlers/workshop');
 const { signUp, login, uploadImage, addUserDetails, getAuthenticatedUser } = require('./handlers/users');
 
@@ -11,6 +11,7 @@ const { signUp, login, uploadImage, addUserDetails, getAuthenticatedUser } = req
 app.get('/workshops', getAllWorkshops);
 app.post('/workshop', FBAuth, postWorkshop);
 app.get('/workshop/:workshopId', getWorkshop);
+//app.post('/workshop/:workshopId/register', FBAuth, registerForWorkshop);
 //TODO Delete workshop
 //TODO Register for workshop
 //TODO Drop from workshop
