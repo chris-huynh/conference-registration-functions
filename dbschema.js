@@ -22,7 +22,9 @@ let db = {
             shirtSize: "string",
             emergencyContactName: "string",
             emergencyContactPhone: "string",
-            emergencyContactRelationship: "string"
+            emergencyContactRelationship: "string",
+            firstSessionWorkshopId: "string",
+            secondSessionWorkshopId: "string"
         }
     ],
     workshops: [
