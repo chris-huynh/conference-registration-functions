@@ -1,4 +1,4 @@
-const {db} = require('../util/admin');
+const {db, FieldValue} = require('../util/admin');
 //Retrieve all workshops
 exports.getAllWorkshops = (request, response) => {
     db.collection('workshops').get()
@@ -58,29 +58,19 @@ exports.getWorkshop = (request, response) => {
         })
 };
 //Sign up for workshop Get roster for workshop, check to see if roster is full
-// exports.registerForWorkshop = (request, response) => {
-//     let workshopRoster = [];
-//     db.doc(`workshops/${request.params.workshopId}`).get()
-//         .then(data => {
-//             data.forEach(doc => {
-//                 workshopRoster.push(doc.data());
-//             });
-//             workshopRoster.push(request.user.email);
-//             return workshopRoster;
-//         })
-//         .then(data => {
-//             //Add document to collection
-//             db.collection('rosters').set(data)
-//                 .then((data) => {
-//                     response.json({message: `Roster ${data.id} successfully updated. User ${request.user.email} successfully registerd`})
-//                 })
-//                 .catch((error) => {
-//                     console.error(error);
-//                     response.status(500).json({error: error.code})
-//                 })
-//         })
-//         .catch(error => {
-//             console.error(error);
-//             response.status(500).json({error: error.code})
-//         })
-// };
+exports.registerForWorkshop = (request, response) => {
+    db.doc(`workshops/${request.params.workshopId}`).get()
+        .then(doc => {
+            if (doc.data().students.length >= doc.data().maxCapacity) {
+                return response.status(403).json({error: "Workshop is full"})
+            }
+            db.doc(`workshops/${request.params.workshopId}`).update({students: FieldValue.arrayUnion(request.user.email)})
+                .then(() => {
+                    return response.status(201).json({message: `${request.user.email} successfully registered for workshop`})
+                })
+        })
+        .catch(error => {
+            console.error(error);
+            response.status(500).json({error: error.code})
+        })
+};
