@@ -11,7 +11,8 @@ exports.getAllWorkshops = (request, response) => {
                     workshopTitle: doc.data().workshopTitle,
                     maxCapacity: doc.data().maxCapacity,
                     workshopDescription: doc.data().workshopDescription,
-                    presenterName: doc.data().presenterName
+                    presenterName: doc.data().presenterName,
+                    imageUrl: doc.data().imageUrl
                 });
             });
             return response.json(workshops)
@@ -20,12 +21,14 @@ exports.getAllWorkshops = (request, response) => {
 };
 //Create a workshop
 exports.postWorkshop = (request, response) => {
+    const defaultImg = 'no-img.png';
     const newWorkshop = {
         session: request.body.session,
         workshopTitle: request.body.workshopTitle,
         maxCapacity: request.body.maxCapacity,
         workshopDescription: request.body.workshopDescription,
         presenterName: request.body.presenterName,
+        imageUrl: `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${defaultImg}?alt=media`,
         students: request.body.students
     };
     db
@@ -57,7 +60,8 @@ exports.getWorkshop = (request, response) => {
             response.status(500).json({error: error.code});
         })
 };
-//Sign up for workshop Get roster for workshop, check to see if roster is full
+//Sign up for workshop
+//TODO Write workshop id to users' credentials
 exports.registerForWorkshop = (request, response) => {
     db.doc(`workshops/${request.params.workshopId}`).get()
         .then(doc => {
