@@ -68,10 +68,54 @@ exports.registerForWorkshop = (request, response) => {
             if (doc.data().students.length >= doc.data().maxCapacity) {
                 return response.status(403).json({error: "Workshop is full"})
             }
-            db.doc(`workshops/${request.params.workshopId}`).update({students: FieldValue.arrayUnion(request.user.email)})
-                .then(() => {
-                    return response.status(201).json({message: `${request.user.email} successfully registered for workshop`})
-                })
+            let schedule;
+            db.doc(`users/${request.user.email}`).get()
+                .then(userDoc => {
+                    schedule = userDoc.data().workshops;
+                    // if the student is not signed up for a workshop during that session, add it to the student's schedule and add them to the workshop's roster
+                    if (schedule[doc.data().session - 1].length === 0) {
+                        schedule[doc.data().session - 1] = doc.id;
+                        db.doc(userDoc).update({workshop: schedule})
+                            .then(() => {
+                                db.doc(`workshops/${request.params.workshopId}`).update({students: FieldValue.arrayUnion(request.user.email)})
+                                    .then(() => {
+                                        return response.status(201).json({message: `${request.user.email} successfully registered for workshop`})
+                                    });
+                            })
+                    }
+                    else {
+                        return response.status(403).json({ error: "User is already registered for a workshop. Please drop from workshop before signing up"})
+                    }
+                });
+        })
+        .catch(error => {
+            console.error(error);
+            response.status(500).json({error: error.code})
+        })
+};
+//TODO add logic in to check if user is signed up for a workshop, then proceed with both removals
+exports.unregisterForWorkshop = (request, response) => {
+    db.doc(`workshops/${request.params.workshopId}`).get()
+        .then(doc => {
+            //If user email is not registered/found for the workshop, return 404
+            if (!doc.data().students.includes(request.user.email)) {
+                return response.status(404).json({message: `${request.user.email} not found in workshop`})
+            }
+            let schedule;
+            db.doc(`users/${request.user.email}`).get()
+                .then(userDoc => {
+                    //Remove workshop from user's profile
+                    schedule = userDoc.data().workshops;
+                    schedule[doc.data().session - 1] = "";
+                    db.doc(userDoc).update({workshop: schedule})
+                        .then(() =>{
+                            //remove student from workshop's roster
+                            db.doc(`workshops/${request.params.workshopId}`).update({students: FieldValue.arrayRemove(request.user.email)})
+                                .then(() => {
+                                    return response.status(200).json({message: `${request.user.email} successfully dropped from workshop`})
+                                });
+                        })
+                });
         })
         .catch(error => {
             console.error(error);
