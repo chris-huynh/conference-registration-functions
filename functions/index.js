@@ -4,7 +4,7 @@ const app = express();
 
 const FBAuth = require('./util/fbAuth');
 // , registerForWorkshop
-const { getAllWorkshops, postWorkshop, getWorkshop, registerForWorkshop, unregisterForWorkshop } = require('./handlers/workshop');
+const { getAllWorkshops, postWorkshop, getWorkshop, registerForWorkshop, unregisterForWorkshop, uploadWorkshopImage } = require('./handlers/workshop');
 const { signUp, login, uploadImage, addUserDetails, getAuthenticatedUser } = require('./handlers/users');
 
 //workshop routes
@@ -14,6 +14,7 @@ app.get('/workshop/:workshopId', getWorkshop);
 app.post('/workshop/:workshopId/register', FBAuth, registerForWorkshop);
 //TODO Delete workshop
 app.post('/workshop/:workshopId/drop', FBAuth, unregisterForWorkshop);
+app.post('/workshop/:workshopId/image', FBAuth, uploadWorkshopImage);
 
 //register and login routes
 app.post('/signup', signUp);
