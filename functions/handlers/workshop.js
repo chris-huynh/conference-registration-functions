@@ -1,4 +1,5 @@
 const {db, FieldValue} = require('../util/admin');
+const config = require('../util/config');
 //Retrieve all workshops
 exports.getAllWorkshops = (request, response) => {
     db.collection('workshops').get()
@@ -68,14 +69,15 @@ exports.registerForWorkshop = (request, response) => {
             if (doc.data().students.length >= doc.data().maxCapacity) {
                 return response.status(403).json({error: "Workshop is full"})
             }
+            const workshopSession = doc.data().session - 1;
             let schedule;
             db.doc(`users/${request.user.email}`).get()
                 .then(userDoc => {
-                    schedule = userDoc.data().workshops;
+                    schedule = userDoc.data().workshop;
                     // if the student is not signed up for a workshop during that session, add it to the student's schedule and add them to the workshop's roster
-                    if (schedule[doc.data().session - 1].length === 0) {
-                        schedule[doc.data().session - 1] = doc.id;
-                        db.doc(userDoc).update({workshop: schedule})
+                    if (schedule[workshopSession].length === 0) {
+                        schedule[workshopSession] = doc.id;
+                        db.doc(`users/${request.user.email}`).update({workshop: schedule})
                             .then(() => {
                                 db.doc(`workshops/${request.params.workshopId}`).update({students: FieldValue.arrayUnion(request.user.email)})
                                     .then(() => {
@@ -101,13 +103,14 @@ exports.unregisterForWorkshop = (request, response) => {
             if (!doc.data().students.includes(request.user.email)) {
                 return response.status(404).json({message: `${request.user.email} not found in workshop`})
             }
+            const workshopSession = doc.data().session - 1;
             let schedule;
             db.doc(`users/${request.user.email}`).get()
                 .then(userDoc => {
                     //Remove workshop from user's profile
-                    schedule = userDoc.data().workshops;
-                    schedule[doc.data().session - 1] = "";
-                    db.doc(userDoc).update({workshop: schedule})
+                    schedule = userDoc.data().workshop;
+                    schedule[workshopSession] = "";
+                    db.doc(`users/${request.user.email}`).update({workshop: schedule})
                         .then(() =>{
                             //remove student from workshop's roster
                             db.doc(`workshops/${request.params.workshopId}`).update({students: FieldValue.arrayRemove(request.user.email)})
