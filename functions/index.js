@@ -19,7 +19,7 @@ app.post('/workshop/:workshopId/image', FBAuth, uploadWorkshopImage);
 
 //product routes
 app.get('/products', FBAuth, getAllProducts);
-app.post('product', postProduct);
+app.post('/product', postProduct);
 app.get('/product/:productId', FBAuth, getProduct);
 
 //register and login routes
