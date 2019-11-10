@@ -45,6 +45,7 @@ exports.signUp = (request, response) => {
                 lastName: newUser.lastName,
                 email: newUser.email,
                 createdAt: new Date().toISOString(),
+                workshops: ["", ""],
                 imageUrl: `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${defaultImg}?alt=media`,
                 registrationStatus: 'unpaid',
                 userId
