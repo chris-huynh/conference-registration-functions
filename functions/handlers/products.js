@@ -29,11 +29,11 @@ exports.postProduct = (request, response) => {
     };
     db.collection('products').add(newProduct)
         .then(doc => {
-            response.status(201).json({message :`${doc.id} was successfully created`});
+            return response.status(201).json({message :`${doc.id} was successfully created`});
         })
         .catch(error => {
             console.error(error);
-            response.status(500).json({error: 'Something went wrong'})
+            return response.status(500).json({error: 'Something went wrong'})
         });
 };
 
