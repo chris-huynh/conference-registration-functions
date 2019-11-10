@@ -27,6 +27,7 @@ exports.postProduct = (request, response) => {
         quantity: request.body.quantity,
         openingTime: request.body.openingTime
     };
+    //TODO check if the date is valid before adding to the database
     db.collection('products').add(newProduct)
         .then(doc => {
             return response.status(201).json({message :`${doc.id} was successfully created`});
